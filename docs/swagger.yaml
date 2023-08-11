@@ -1,0 +1,474 @@
+definitions:
+  dto.CreateUpdatePostRequest:
+    properties:
+      description:
+        maxLength: 200
+        type: string
+      imageId:
+        type: integer
+      title:
+        maxLength: 20
+        minLength: 3
+        type: string
+    required:
+    - description
+    - imageId
+    - title
+    type: object
+  dto.FileResponse:
+    properties:
+      directory:
+        type: string
+      id:
+        type: integer
+      mimeType:
+        type: string
+      name:
+        type: string
+    type: object
+  dto.GetOtpRequestDto:
+    properties:
+      mobileNumber:
+        maxLength: 11
+        minLength: 11
+        type: string
+    required:
+    - mobileNumber
+    type: object
+  dto.PostResponse:
+    properties:
+      description:
+        type: string
+      id:
+        type: integer
+      image:
+        $ref: '#/definitions/dto.FileResponse'
+      title:
+        type: string
+    type: object
+  dto.RefreshToken:
+    properties:
+      refreshToken:
+        type: string
+    required:
+    - refreshToken
+    type: object
+  dto.RegisterLoginByMobileRequest:
+    properties:
+      mobileNumber:
+        maxLength: 11
+        minLength: 11
+        type: string
+      otp:
+        maxLength: 6
+        minLength: 6
+        type: string
+    required:
+    - mobileNumber
+    - otp
+    type: object
+  multipart.FileHeader:
+    properties:
+      filename:
+        type: string
+      header:
+        $ref: '#/definitions/textproto.MIMEHeader'
+      size:
+        type: integer
+    type: object
+  textproto.MIMEHeader:
+    additionalProperties:
+      items:
+        type: string
+      type: array
+    type: object
+  utils.BaseHttpResponse:
+    properties:
+      error: {}
+      result: {}
+      resultCode:
+        $ref: '#/definitions/utils.ResultCode'
+      success:
+        type: boolean
+      validationErrors:
+        items:
+          $ref: '#/definitions/utils.ValidationError'
+        type: array
+    type: object
+  utils.ResultCode:
+    enum:
+    - 0
+    - 40001
+    - 40101
+    - 40301
+    - 40401
+    - 42901
+    - 42902
+    - 50001
+    - 50002
+    type: integer
+    x-enum-varnames:
+    - Success
+    - ValidationErrorCode
+    - AuthError
+    - ForbiddenError
+    - NotFoundError
+    - LimiterError
+    - OtpLimiterError
+    - CustomRecovery
+    - InternalError
+  utils.ValidationError:
+    properties:
+      property:
+        type: string
+      tag:
+        type: string
+      value:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /v1/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: RegisterLoginByMobileNumber
+      parameters:
+      - description: RegisterLoginByMobileRequest
+        in: body
+        name: Request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RegisterLoginByMobileRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Success
+          schema:
+            $ref: '#/definitions/utils.BaseHttpResponse'
+        "400":
+          description: Failed
+          schema:
+            $ref: '#/definitions/utils.BaseHttpResponse'
+        "409":
+          description: Failed
+          schema:
+            $ref: '#/definitions/utils.BaseHttpResponse'
+      summary: RegisterLoginByMobileNumber
+      tags:
+      - Auth
+  /v1/auth/refresh-token:
+    post:
+      consumes:
+      - application/json
+      description: RefreshToken
+      parameters:
+      - description: RefreshToken
+        in: body
+        name: Request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RefreshToken'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Success
+          schema:
+            $ref: '#/definitions/utils.BaseHttpResponse'
+        "400":
+          description: Failed
+          schema:
+            $ref: '#/definitions/utils.BaseHttpResponse'
+        "409":
+          description: Failed
+          schema:
+            $ref: '#/definitions/utils.BaseHttpResponse'
+      summary: RefreshToken
+      tags:
+      - Auth
+  /v1/auth/send-otp:
+    post:
+      consumes:
+      - application/json
+      description: Send otp to user
+      parameters:
+      - description: GetOtpRequest
+        in: body
+        name: Request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.GetOtpRequestDto'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Success
+          schema:
+            $ref: '#/definitions/utils.BaseHttpResponse'
+        "400":
+          description: Failed
+          schema:
+            $ref: '#/definitions/utils.BaseHttpResponse'
+        "409":
+          description: Failed
+          schema:
+            $ref: '#/definitions/utils.BaseHttpResponse'
+      summary: Send otp to user
+      tags:
+      - Auth
+  /v1/files/:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: Create a file
+      parameters:
+      - description: Create a file
+        in: formData
+        name: file
+        required: true
+        type: file
+      responses:
+        "201":
+          description: File response
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.BaseHttpResponse'
+            - properties:
+                result:
+                  $ref: '#/definitions/dto.FileResponse'
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/utils.BaseHttpResponse'
+      security:
+      - AuthBearer: []
+      summary: Create a file
+      tags:
+      - Files
+  /v1/files/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a file
+      parameters:
+      - description: Id
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: response
+          schema:
+            $ref: '#/definitions/utils.BaseHttpResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/utils.BaseHttpResponse'
+      security:
+      - AuthBearer: []
+      summary: Delete a file
+      tags:
+      - Files
+    get:
+      consumes:
+      - application/json
+      description: Get a file
+      parameters:
+      - description: Id
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: File response
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.BaseHttpResponse'
+            - properties:
+                result:
+                  $ref: '#/definitions/dto.FileResponse'
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/utils.BaseHttpResponse'
+      security:
+      - AuthBearer: []
+      summary: Get a file
+      tags:
+      - Files
+  /v1/health/:
+    get:
+      consumes:
+      - application/json
+      description: Health Check
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: '#/definitions/utils.BaseHttpResponse'
+        "400":
+          description: Failed
+          schema:
+            $ref: '#/definitions/utils.BaseHttpResponse'
+      summary: Health Check
+      tags:
+      - health
+  /v1/posts:
+    get:
+      consumes:
+      - application/json
+      description: Get list of post
+      responses:
+        "200":
+          description: Post response
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.BaseHttpResponse'
+            - properties:
+                result:
+                  $ref: '#/definitions/dto.PostResponse'
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/utils.BaseHttpResponse'
+      security:
+      - AuthBearer: []
+      summary: Get list of post
+      tags:
+      - Posts
+  /v1/posts/:
+    post:
+      consumes:
+      - application/json
+      description: Create a post
+      parameters:
+      - description: Create a post
+        in: body
+        name: Request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateUpdatePostRequest'
+      responses:
+        "201":
+          description: Post response
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.BaseHttpResponse'
+            - properties:
+                result:
+                  $ref: '#/definitions/dto.PostResponse'
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/utils.BaseHttpResponse'
+      security:
+      - AuthBearer: []
+      summary: Create a post
+      tags:
+      - Posts
+  /v1/posts/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a post
+      parameters:
+      - description: Id
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: response
+          schema:
+            $ref: '#/definitions/utils.BaseHttpResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/utils.BaseHttpResponse'
+      security:
+      - AuthBearer: []
+      summary: Delete a post
+      tags:
+      - Posts
+    get:
+      consumes:
+      - application/json
+      description: Get a post
+      parameters:
+      - description: Id
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: Post response
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.BaseHttpResponse'
+            - properties:
+                result:
+                  $ref: '#/definitions/dto.PostResponse'
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/utils.BaseHttpResponse'
+      security:
+      - AuthBearer: []
+      summary: Get a post
+      tags:
+      - Posts
+    put:
+      consumes:
+      - application/json
+      description: Update a post
+      parameters:
+      - description: Id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update a post
+        in: body
+        name: Request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateUpdatePostRequest'
+      responses:
+        "200":
+          description: Post response
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.BaseHttpResponse'
+            - properties:
+                result:
+                  $ref: '#/definitions/dto.PostResponse'
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/utils.BaseHttpResponse'
+      security:
+      - AuthBearer: []
+      summary: Update a post
+      tags:
+      - Posts
+securityDefinitions:
+  AuthBearer:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
